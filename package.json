@@ -1,0 +1,10 @@
+{
+  "name": "discord-bot-nickname",
+  "dependencies": {
+    "typescript": "^4.5.5"
+  },
+  "devDependencies": {
+    "prettier": "^2.5.1",
+    "ts-node": "^10.5.0"
+  }
+}

@@ -1,5 +1,7 @@
 {
   "semi": false,
   "singleQuote": true,
-  "importOrderSeparation": true
+  "importOrder": ["^@types/(.*)$", "^[./]"],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }

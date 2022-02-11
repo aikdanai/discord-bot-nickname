@@ -1,10 +1,25 @@
 {
   "name": "discord-bot-nickname",
+  "scripts": {
+    "start": "ts-node-dev ./src/main.ts",
+    "dcmd": "ts-node ./src/deploy-commands.ts"
+  },
   "dependencies": {
-    "typescript": "^4.5.5"
+    "@discordjs/builders": "^0.12.0",
+    "@discordjs/rest": "^0.3.0",
+    "bufferutil": "^4.0.6",
+    "discord-api-types": "^0.27.0",
+    "discord.js": "^13.6.0",
+    "dotenv": "^16.0.0",
+    "node-graceful-shutdown": "^1.1.0",
+    "typescript": "^4.5.5",
+    "utf-8-validate": "^5.0.8"
   },
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^3.2.0",
+    "@types/node": "^17.0.17",
     "prettier": "^2.5.1",
-    "ts-node": "^10.5.0"
+    "ts-node": "^10.5.0",
+    "ts-node-dev": "^1.1.8"
   }
 }

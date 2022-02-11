@@ -1,9 +1,31 @@
 import { CacheType, CommandInteraction, GuildMember } from 'discord.js'
+import EventEmitter from 'events'
 import { BaseHandler } from 'types'
 
+export class Nicknamer {
+  public emitter: EventEmitter
+  public pending: boolean
+  public member: GuildMember
+
+  constructor(m: GuildMember) {
+    this.pending = false
+    this.emitter = new EventEmitter()
+    this.member = m
+    this.emitter.on('changeNickname', async (newNickname: string) => {
+      this.pending = true
+      this.member.nickname = newNickname
+      await this.member.setNickname(newNickname)
+      this.pending = false
+    })
+  }
+}
+
 export class NicknameHandler implements BaseHandler {
-  private _nicknamer: { [gid: string]: { [id: string]: GuildMember } } = {}
-  private _running: boolean = false
+  private _nicknamer: {
+    [gid: string]: {
+      [id: string]: Nicknamer
+    }
+  } = {}
 
   constructor() {
     setInterval(this.runningNickname, 100)
@@ -27,12 +49,12 @@ export class NicknameHandler implements BaseHandler {
     return interaction.reply('Nickname go brrrrrrrrr')
   }
 
-  private runningNickname = async () => {
-    if (this._running) return
-    this._running = true
+  private runningNickname = () => {
     for (let gid in this._nicknamer) {
       for (let id in this._nicknamer[gid]) {
-        let mem = this._nicknamer[gid][id]
+        const nicknamer = this._nicknamer[gid][id]
+        if (nicknamer.pending) continue
+        let mem = nicknamer.member
         let nickname = mem.nickname || mem.user?.username
         const prefix = '› ឵឵'
         nickname = nickname.replace(prefix, '').replace(' ', ' ឵឵')
@@ -41,19 +63,18 @@ export class NicknameHandler implements BaseHandler {
         const newNickname = prefix + head + tail
         if (!newNickname) continue
         try {
-          mem.nickname = newNickname
           console.log(id, ':', nickname, '->', newNickname)
-          await mem.setNickname(newNickname)
+          nicknamer.emitter.emit('changeNickname', newNickname)
         } catch (err) {
           console.error(err)
         }
       }
     }
-    this._running = false
   }
 
   private add = (mem: GuildMember) => {
     if (!this._nicknamer[mem.guild.id]) this._nicknamer[mem.guild.id] = {}
-    this._nicknamer[mem.guild.id][mem.id] = mem
+    const n = new Nicknamer(mem)
+    this._nicknamer[mem.guild.id][mem.id] = n
   }
 }

@@ -39,7 +39,7 @@ client.on('interactionCreate', async (interaction) => {
 
 client.on('guildCreate', async (guild) => {
   await registerCommands(guild)
-  guild.me?.send('Hello sheeple! 🐑 🐑 🐑')
+  await guild.systemChannel?.send('Hello sheeple! 🐑 🐑 🐑')
 })
 
 client.login(TOKEN)

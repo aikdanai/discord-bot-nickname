@@ -7,6 +7,12 @@ import { TOKEN } from './env'
 import { NicknameHandler } from './nickname'
 
 export const client = new Client({
+  restTimeOffset: 50,
+  restWsBridgeTimeout: 2000,
+  restRequestTimeout: 5000,
+  shardCount: 10,
+  shards: 'auto',
+  invalidRequestWarningInterval: 10,
   intents: [
     Intents.FLAGS.GUILDS,
     Intents.FLAGS.GUILD_MEMBERS,

@@ -1,8 +1,10 @@
 {
   "name": "discord-bot-nickname",
   "scripts": {
-    "start": "ts-node-dev ./src/main.ts",
-    "dcmd": "ts-node ./src/deploy-commands.ts"
+    "dev": "ts-node-dev ./src/main.ts",
+    "start": "node ./dist/main.js",
+    "build": "tsc",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@discordjs/builders": "^0.12.0",
@@ -20,6 +22,7 @@
     "@types/node": "^17.0.17",
     "prettier": "^2.5.1",
     "ts-node": "^10.5.0",
-    "ts-node-dev": "^1.1.8"
+    "ts-node-dev": "^1.1.8",
+    "tsc": "^2.0.4"
   }
 }

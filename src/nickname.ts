@@ -1,9 +1,4 @@
-import {
-  CacheType,
-  CommandInteraction,
-  GuildMember,
-  Interaction,
-} from 'discord.js'
+import { CacheType, CommandInteraction, GuildMember } from 'discord.js'
 import { BaseHandler } from 'types'
 
 export class NicknameHandler implements BaseHandler {

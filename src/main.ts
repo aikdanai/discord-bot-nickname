@@ -24,6 +24,7 @@ const nicknameHandler = new NicknameHandler()
 
 const handlers: { [cmd: string]: BaseHandler } = {
   [CMD.ANIMATE_NICKNAME]: nicknameHandler,
+  [CMD.STOP_NICKNAME]: nicknameHandler,
 }
 
 client.once('ready', async () => {

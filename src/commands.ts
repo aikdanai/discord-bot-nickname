@@ -8,6 +8,7 @@ import { CLIENT_ID, TOKEN } from './env'
 export const CMD = {
   PING: 'ping',
   ANIMATE_NICKNAME: 'animatenick',
+  STOP_NICKNAME: 'stopnick',
 }
 
 export const registerCommands = async (guild: Guild) => {
@@ -18,6 +19,9 @@ export const registerCommands = async (guild: Guild) => {
     new SlashCommandBuilder()
       .setName(CMD.ANIMATE_NICKNAME)
       .setDescription('Animate nickname with styles'),
+    new SlashCommandBuilder()
+      .setName(CMD.STOP_NICKNAME)
+      .setDescription('Stop animate nickname'),
   ].map((command) => command.toJSON())
 
   const rest = new REST({ version: '9' }).setToken(TOKEN)

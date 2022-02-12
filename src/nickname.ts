@@ -1,12 +1,8 @@
-import { CMD } from 'commands'
-import {
-  CacheType,
-  CommandInteraction,
-  GuildMember,
-  Interaction,
-} from 'discord.js'
+import { CacheType, CommandInteraction, GuildMember } from 'discord.js'
 import EventEmitter from 'events'
-import { BaseHandler } from 'types'
+
+import { CMD } from './commands'
+import { BaseHandler } from './types'
 
 export class Nicknamer {
   public emitter: EventEmitter

@@ -1,10 +1,10 @@
 import { Client, Intents } from 'discord.js'
 import { onShutdown } from 'node-graceful-shutdown'
-import { BaseHandler } from 'types'
 
 import { CMD, registerCommands } from './commands'
 import { TOKEN } from './env'
 import { NicknameHandler } from './nickname'
+import { BaseHandler } from './types'
 
 export const client = new Client({
   restTimeOffset: 50,

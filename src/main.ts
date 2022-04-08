@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
 import { REST } from '@discordjs/rest'
-import { Routes } from 'discord-api-types/v9'
+import { APIApplicationCommandOption, Routes } from 'discord-api-types/v9'
 import { Client, Guild, Intents } from 'discord.js'
 import _ from 'lodash'
 import { onShutdown } from 'node-graceful-shutdown'
@@ -27,6 +27,7 @@ export const client = new Client({
 type Command = {
   name: string
   description: string
+  options?: Array<APIApplicationCommandOption>
 }
 
 const CMD: { [x: string]: Command } = {
@@ -42,15 +43,22 @@ const CMD: { [x: string]: Command } = {
     name: 'stopnick',
     description: 'Stop animate nickname',
   },
+  PLAY: {
+    name: 'play',
+    description: 'Plays some tune',
+    options: [
+      {
+        name: 'query',
+        type: 3,
+        description: 'Search for the song you want to play',
+        required: true,
+      },
+    ],
+  },
 }
 
 const registerCommands = async (guild: Guild) => {
-  const commands = _.map(CMD, (command) =>
-    new SlashCommandBuilder()
-      .setName(command.name)
-      .setDescription(command.description)
-      .toJSON()
-  )
+  const commands = _.map(CMD)
   const rest = new REST({ version: '9' }).setToken(TOKEN)
   await rest.put(Routes.applicationGuildCommands(CLIENT_ID, guild.id), {
     body: commands,

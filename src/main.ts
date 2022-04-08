@@ -1,10 +1,14 @@
-import { Client, Intents } from 'discord.js'
+import { SlashCommandBuilder } from '@discordjs/builders'
+import { REST } from '@discordjs/rest'
+import { Routes } from 'discord-api-types/v9'
+import { Client, Guild, Intents } from 'discord.js'
+import _ from 'lodash'
 import { onShutdown } from 'node-graceful-shutdown'
 
-import { CMD, registerCommands } from './commands'
-import { TOKEN } from './env'
-import { NicknameHandler } from './nickname'
-import { BaseHandler } from './types'
+import { NicknameHandler } from './commands/nickname'
+import { PingHandler } from './commands/ping'
+import { CLIENT_ID, TOKEN } from './env'
+import { CommandHandler } from './types'
 
 export const client = new Client({
   restTimeOffset: 50,
@@ -20,33 +24,99 @@ export const client = new Client({
   ],
 })
 
-const nicknameHandler = new NicknameHandler()
-
-const handlers: { [cmd: string]: BaseHandler } = {
-  [CMD.ANIMATE_NICKNAME]: nicknameHandler,
-  [CMD.STOP_NICKNAME]: nicknameHandler,
+type Command = {
+  name: string
+  description: string
 }
 
+const CMD: { [x: string]: Command } = {
+  PING: {
+    name: 'ping',
+    description: 'Replies with pong',
+  },
+  ANIMATE_NICKNAME: {
+    name: 'animatenick',
+    description: 'Animate nickname with styles',
+  },
+  STOP_NICKNAME: {
+    name: 'stopnick',
+    description: 'Stop animate nickname',
+  },
+}
+
+const registerCommands = async (guild: Guild) => {
+  const commands = _.map(CMD, (command) =>
+    new SlashCommandBuilder()
+      .setName(command.name)
+      .setDescription(command.description)
+      .toJSON()
+  )
+  const rest = new REST({ version: '9' }).setToken(TOKEN)
+  await rest.put(Routes.applicationGuildCommands(CLIENT_ID, guild.id), {
+    body: commands,
+  })
+
+  console.log(
+    'Successfully registered application commands on guild',
+    guild.name
+  )
+}
+
+type GuildHandler = {
+  [cmd: string]: CommandHandler
+}
+
+const newGuildHandler = (guildId: string): GuildHandler => {
+  const pingHandler = new PingHandler()
+  const nicknameHandler = new NicknameHandler()
+  return {
+    [CMD.PING.name]: pingHandler.handlePing,
+    [CMD.ANIMATE_NICKNAME.name]: nicknameHandler.handleAnimateCommand,
+    [CMD.STOP_NICKNAME.name]: nicknameHandler.handleStopAnimateCommand,
+  }
+}
+
+const guildHandlers: { [gid: string]: GuildHandler } = {}
+
 client.once('ready', async () => {
-  console.log('Client Ready')
-  client.guilds.cache.forEach(registerCommands)
+  try {
+    console.log('Client Ready')
+    client.guilds.cache.forEach(async (guild) => {
+      await registerCommands(guild)
+      guildHandlers[guild.id] = newGuildHandler(guild.id)
+    })
+  } catch (err) {
+    console.warn(err)
+  }
 })
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isCommand()) return
-  const { commandName } = interaction
-  if (commandName === CMD.PING) {
-    await interaction.reply('Pong!')
-  } else if (handlers[commandName]) {
-    await handlers[commandName].handleCommand(interaction)
-  } else {
-    interaction.reply('Not implemented yet ;)')
+  try {
+    if (!interaction.isCommand()) return
+    const { commandName } = interaction
+    if (!interaction.guildId) return
+    if (!guildHandlers[interaction.guildId]) {
+      guildHandlers[interaction.guildId] = newGuildHandler(interaction.guildId)
+    }
+    const guildHandler = guildHandlers[interaction.guildId]
+    if (guildHandler[commandName]) {
+      await guildHandler[commandName](interaction)
+    } else {
+      await interaction.reply('Not implemented yet 🥺')
+    }
+  } catch (err) {
+    console.warn(err)
   }
 })
 
 client.on('guildCreate', async (guild) => {
-  await registerCommands(guild)
-  await guild.systemChannel?.send('Hello sheeple! 🐑 🐑 🐑')
+  try {
+    await registerCommands(guild)
+    guildHandlers[guild.id] = newGuildHandler(guild.id)
+    await guild.systemChannel?.send('Hello sheeple! 🐑 🐑 🐑')
+  } catch (err) {
+    console.warn(err)
+  }
 })
 
 client.login(TOKEN)

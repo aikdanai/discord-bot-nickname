@@ -1,5 +1,5 @@
 import { CacheType, CommandInteraction } from 'discord.js'
 
-export interface BaseHandler {
-  handleCommand(interaction: CommandInteraction<CacheType>): Promise<void>
-}
+export type CommandHandler = (
+  interaction: CommandInteraction<CacheType>
+) => Promise<void>

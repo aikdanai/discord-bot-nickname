@@ -7,6 +7,7 @@ import { onShutdown } from 'node-graceful-shutdown'
 
 import { NicknameHandler } from './commands/nickname'
 import { PingHandler } from './commands/ping'
+import { SongHandler } from './commands/song'
 import { CLIENT_ID, TOKEN } from './env'
 import { CommandHandler } from './types'
 
@@ -21,6 +22,7 @@ export const client = new Client({
     Intents.FLAGS.GUILDS,
     Intents.FLAGS.GUILD_MEMBERS,
     Intents.FLAGS.GUILD_MESSAGES,
+    Intents.FLAGS.GUILD_VOICE_STATES,
   ],
 })
 
@@ -55,6 +57,58 @@ const CMD: { [x: string]: Command } = {
       },
     ],
   },
+  PAUSE: {
+    name: 'pause',
+    description: 'Pause the tune',
+  },
+  UNPAUSE: {
+    name: 'unpause',
+    description: 'Continue the tune',
+  },
+  STOP: {
+    name: 'stop',
+    description: 'Stop and kill the music',
+  },
+  SKIP: {
+    name: 'skip',
+    description: 'Skip current tune',
+  },
+  BACK: {
+    name: 'back',
+    description: 'Go back to previous tune',
+  },
+  CLEAR: {
+    name: 'clear',
+    description: 'Clear the queue',
+  },
+  QUEUE: {
+    name: 'queue',
+    description: 'Sees current queue',
+  },
+  VOLUME: {
+    name: 'volume',
+    description: 'Set volume (default 40)',
+    options: [
+      {
+        name: 'level',
+        type: 4,
+        description: 'The volume 1 to 100 percent',
+        required: true,
+      },
+    ],
+  },
+  REMOVE: {
+    name: 'remove',
+    description: 'Remove track from the queue (See /queue)',
+    options: [
+      {
+        name: 'no',
+        type: 4,
+        description: 'No. of song in the queue to remove',
+        required: true,
+      },
+    ],
+  },
 }
 
 const registerCommands = async (guild: Guild) => {
@@ -74,13 +128,25 @@ type GuildHandler = {
   [cmd: string]: CommandHandler
 }
 
-const newGuildHandler = (guildId: string): GuildHandler => {
+const newGuildHandler = async (guildId: string): Promise<GuildHandler> => {
+  const guild = await client.guilds.fetch(guildId)
   const pingHandler = new PingHandler()
   const nicknameHandler = new NicknameHandler()
+  const songHandler = new SongHandler(client, guild)
   return {
-    [CMD.PING.name]: pingHandler.handlePing,
-    [CMD.ANIMATE_NICKNAME.name]: nicknameHandler.handleAnimateCommand,
-    [CMD.STOP_NICKNAME.name]: nicknameHandler.handleStopAnimateCommand,
+    [CMD.PING.name]: pingHandler.ping,
+    [CMD.ANIMATE_NICKNAME.name]: nicknameHandler.animate,
+    [CMD.STOP_NICKNAME.name]: nicknameHandler.stopAnimate,
+    [CMD.PLAY.name]: songHandler.play,
+    [CMD.PAUSE.name]: songHandler.pause,
+    [CMD.UNPAUSE.name]: songHandler.unpause,
+    [CMD.STOP.name]: songHandler.stop,
+    [CMD.SKIP.name]: songHandler.skip,
+    [CMD.BACK.name]: songHandler.back,
+    [CMD.CLEAR.name]: songHandler.clear,
+    [CMD.QUEUE.name]: songHandler.queue,
+    [CMD.VOLUME.name]: songHandler.volume,
+    [CMD.REMOVE.name]: songHandler.remove,
   }
 }
 
@@ -91,7 +157,7 @@ client.once('ready', async () => {
     console.log('Client Ready')
     client.guilds.cache.forEach(async (guild) => {
       await registerCommands(guild)
-      guildHandlers[guild.id] = newGuildHandler(guild.id)
+      guildHandlers[guild.id] = await newGuildHandler(guild.id)
     })
   } catch (err) {
     console.warn(err)
@@ -104,7 +170,9 @@ client.on('interactionCreate', async (interaction) => {
     const { commandName } = interaction
     if (!interaction.guildId) return
     if (!guildHandlers[interaction.guildId]) {
-      guildHandlers[interaction.guildId] = newGuildHandler(interaction.guildId)
+      guildHandlers[interaction.guildId] = await newGuildHandler(
+        interaction.guildId
+      )
     }
     const guildHandler = guildHandlers[interaction.guildId]
     if (guildHandler[commandName]) {
@@ -120,7 +188,7 @@ client.on('interactionCreate', async (interaction) => {
 client.on('guildCreate', async (guild) => {
   try {
     await registerCommands(guild)
-    guildHandlers[guild.id] = newGuildHandler(guild.id)
+    guildHandlers[guild.id] = await newGuildHandler(guild.id)
     await guild.systemChannel?.send('Hello sheeple! 🐑 🐑 🐑')
   } catch (err) {
     console.warn(err)

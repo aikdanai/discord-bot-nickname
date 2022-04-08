@@ -38,9 +38,7 @@ export class NicknameHandler {
     console.log('Nickname Task Registered')
   }
 
-  public handleAnimateCommand = async (
-    interaction: CommandInteraction<CacheType>
-  ) => {
+  public animate = async (interaction: CommandInteraction<CacheType>) => {
     if (!interaction.guild?.me?.permissions.has('MANAGE_NICKNAMES')) {
       return interaction.reply("Sadly, I'm not allowed to manage nicknames.")
     }
@@ -55,9 +53,7 @@ export class NicknameHandler {
     return interaction.reply('Go!')
   }
 
-  public handleStopAnimateCommand = async (
-    interaction: CommandInteraction<CacheType>
-  ) => {
+  public stopAnimate = async (interaction: CommandInteraction<CacheType>) => {
     const mem = interaction.member
     if (!(mem instanceof GuildMember)) {
       return interaction.reply('Who are you?')
